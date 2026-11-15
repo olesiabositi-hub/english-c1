@@ -73,7 +73,7 @@ main { outline: none; }
 .stats dd { margin: 0; font-family: var(--serif); font-size: 30px; font-weight: 600; }
 
 .week { padding-top: 26px; }
-.wk-list { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--rule); margin-top: 12px; }
+.wk-list { display: grid; grid-template-columns: repeat(5, 1fr) repeat(2, 0.8fr); border-top: 1px solid var(--rule); margin-top: 12px; }
 .wk-item { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; border-right: 1px solid var(--rule); text-decoration: none; min-height: 150px; }
 .wk-item:last-child { border-right: none; }
 .wk-item:first-child { padding-left: 0; }
@@ -313,3 +313,14 @@ textarea:focus { outline: none; border-color: var(--ink); background: #fff; }
   .hl.show::after { white-space: normal; width: 220px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* covers */
+figure.cover { margin: 0 0 22px; }
+figure.cover img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--paper-deep); filter: saturate(.92); }
+.has-cover .issue-no { font-size: clamp(96px, 12vw, 150px); float: left; margin: 0 22px 0 -4px; }
+.has-cover .kicker { margin-top: 10px; }
+.has-cover .headline { font-size: clamp(38px, 5vw, 60px); }
+.has-cover .front-actions, .has-cover .standfirst { clear: both; }
+.issue-no.word { font-size: clamp(80px, 11vw, 140px); }
+.article figure.cover { margin: 0 0 24px; }
+.wk-item .t.weekend { font-style: italic; font-weight: 400; }

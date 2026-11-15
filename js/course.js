@@ -10,11 +10,13 @@ C1.course = {
   ],
   weeks: [
     { n: 1, theme: 'First impressions', grammar: 'Present perfect and past tenses', lessons: [
-      { id: 'w01d1', title: 'First impressions', grammar: 'Present perfect vs past simple', minutes: 40 },
-      { id: 'w01d2', title: 'Keeping in touch', grammar: 'Present perfect continuous', minutes: 40 },
-      { id: 'w01d3', title: 'A story worth telling', grammar: 'Past perfect and narrative tenses', minutes: 40 },
-      { id: 'w01d4', title: 'States of mind', grammar: 'State and action verbs', minutes: 40 },
-      { id: 'w01d5', title: 'Tell me about yourself', grammar: 'Week 1 review', minutes: 45 }
+      { id: 'w01d1', day: 1, issue: 1, title: 'First impressions', grammar: 'Present perfect vs past simple', minutes: 40 },
+      { id: 'w01d2', day: 2, issue: 2, title: 'Keeping in touch', grammar: 'Present perfect continuous', minutes: 40 },
+      { id: 'w01d3', day: 3, issue: 3, title: 'A story worth telling', grammar: 'Past perfect and narrative tenses', minutes: 40 },
+      { id: 'w01d4', day: 4, issue: 4, title: 'States of mind', grammar: 'State and action verbs', minutes: 40 },
+      { id: 'w01d5', day: 5, issue: 5, title: 'Tell me about yourself', grammar: 'Week 1 review', minutes: 45 },
+      { id: 'w01sat', day: 6, kind: 'test', title: 'Week 1 test', grammar: 'Контрольная по неделе', minutes: 25 },
+      { id: 'w01sun', day: 7, kind: 'interview', title: 'Interview practice', grammar: 'Пять вопросов с интервью', minutes: 30 }
     ]},
     { n: 2, theme: 'People and personality', grammar: 'Habits: used to, would, will' },
     { n: 3, theme: 'Communication styles', grammar: 'Future forms' },

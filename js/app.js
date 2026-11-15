@@ -65,6 +65,16 @@
       s.onerror = rej; document.body.appendChild(s);
     });
   }
+  const DAY_RU = ['', 'день 1', 'день 2', 'день 3', 'день 4', 'день 5', 'суббота', 'воскресенье'];
+  function kickerFor(l) { return l.issue ? `Выпуск ${l.issue}. Неделя ${l.week}, ${DAY_RU[l.day]}` : `Неделя ${l.week}, ${DAY_RU[l.day]}`; }
+  function labelFor(L) { return L.issue ? 'Выпуск ' + L.issue : (L.kind === 'test' ? 'Контрольная' : 'Интервью'); }
+  function withCover(root, src, onShow) {
+    const fig = root.querySelector('figure.cover'); if (!fig) return;
+    const img = fig.querySelector('img');
+    img.onload = () => { fig.hidden = false; if (onShow) onShow(); };
+    img.onerror = () => fig.remove();
+    img.src = src;
+  }
   function nextLesson() { return allLessons().find(l => !state.done[l.id]) || null; }
 
   /* ---------- SRS (simplified SM-2) ---------- */
@@ -117,15 +127,15 @@
     const learnt = words.filter(c => c.int >= 21).length;
     const dateStr = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
     const week = next ? C1.course.weeks.find(w => w.n === next.week) : null;
-    const issueNo = next ? lessons.indexOf(lessons.find(l => l.id === next.id)) + 1 : doneCount;
 
     const el = h(`<div class="page home">
       <div class="dateline"><span>${esc(dateStr)}</span><span>Неделя ${week ? week.n : '—'} из 26</span></div>
       <section class="front">
         <div class="front-main">
           ${next ? `
-          <div class="issue-no" aria-hidden="true">${issueNo}</div>
-          <p class="kicker">Выпуск ${issueNo}. Неделя ${week.n}, день ${(week.lessons||[]).findIndex(l=>l.id===next.id)+1}</p>
+          <figure class="cover" hidden><img alt=""></figure>
+          ${next.issue ? `<div class="issue-no" aria-hidden="true">${next.issue}</div>` : `<div class="issue-no word" aria-hidden="true">${next.kind === 'test' ? 'Test' : 'Interview'}</div>`}
+          <p class="kicker">${kickerFor(next)}</p>
           <h1 class="headline">${esc(next.title)}</h1>
           <p class="standfirst" id="standfirst">${esc(next.grammar)}</p>
           <div class="front-actions">
@@ -152,6 +162,7 @@
       ${week ? weekStrip(week) : ''}
     </div>`);
     app.appendChild(el);
+    if (next) withCover(el, 'images/' + next.id + '.jpg', () => el.querySelector('.front-main').classList.add('has-cover'));
     if (next) loadLesson(next.id).then(l => { const sf = document.getElementById('standfirst'); if (sf && l.standfirst) sf.textContent = l.standfirst; }).catch(() => {});
   }
 
@@ -159,7 +170,8 @@
     const items = (week.lessons || []).map((l, i) => {
       const done = state.done[l.id]; const isNext = nextLesson() && nextLesson().id === l.id;
       const available = done || isNext;
-      const inner = `<span class="day">День ${i + 1}</span><span class="t">${esc(l.title)}</span><span class="g">${esc(l.grammar)}</span><span class="st">${done ? 'пройдено, ' + done.score + '%' : isNext ? 'сегодня' : 'позже'}</span>`;
+      let inner = `<span class="day">${DAY_RU[l.day].replace(/^д/, 'Д').replace(/^с/, 'С').replace(/^в/, 'В')}</span><span class="t">${esc(l.title)}</span><span class="g">${esc(l.grammar)}</span><span class="st">${done ? 'пройдено, ' + done.score + '%' : isNext ? 'сегодня' : 'позже'}</span>`;
+      if (l.kind) inner = inner.replace('class="t"', 'class="t weekend"');
       return available ? `<a class="wk-item ${done ? 'done' : ''} ${isNext ? 'next' : ''}" href="#lesson-${l.id}">${inner}</a>` : `<div class="wk-item locked">${inner}</div>`;
     }).join('');
     return `<section class="week"><h2>Неделя ${week.n}. ${esc(week.theme)}</h2><div class="wk-list">${items}</div></section>`;
@@ -311,11 +323,12 @@
       if (per.includes(b.type)) b.items.forEach((it, i) => screens.push({ si, b, it, i, n: b.items.length }));
       else screens.push({ si, b, it: null, i: 0, n: 1 });
     }));
+    screens.forEach((s, k) => { s.last = k === screens.length - 1; s.idx = k; });
     let pos = 0; const score = { right: 0, total: 0 };
     const el = h(`<div class="lesson">
       <div class="lesson-bar">
         <a class="close" href="#home" aria-label="Закрыть урок">✕</a>
-        <div class="lesson-title"><span class="issue">Выпуск ${L.issue}</span> ${esc(L.title)}</div>
+        <div class="lesson-title"><span class="issue">${labelFor(L)}</span> ${esc(L.title)}</div>
         <ol class="steps">${L.steps.map((s, i) => `<li data-si="${i}">${esc(s.title)}</li>`).join('')}</ol>
         <div class="pbar"><span></span></div>
       </div>
@@ -352,12 +365,14 @@
       touchStreak(); saveState();
       el.querySelector('.pbar span').style.width = '100%';
       el.querySelectorAll('.steps li').forEach(li => { li.classList.add('past'); li.classList.remove('cur'); });
-      const verdict = pct >= 90 ? 'Отличный выпуск.' : pct >= 70 ? 'Хороший результат.' : 'Стоит вернуться к грамматике ещё раз.';
+      const verdict = pct >= 90 ? (L.issue ? 'Отличный выпуск.' : 'Отличный результат.') : pct >= 70 ? 'Хороший результат.' : 'Стоит вернуться к грамматике ещё раз.';
+      const isTalk = !score.total;
       stage.innerHTML = `<div class="screen finish">
-        <p class="kicker">Выпуск ${L.issue} пройден</p>
-        <p class="score">${pct}<small>%</small></p>
-        <p class="verdict">${verdict} Правильных ответов: ${score.right} из ${score.total}.</p>
-        <p>${added ? `${added} ${plural(added, 'карточка добавлена', 'карточки добавлены', 'карточек добавлено')} в повторение. Первые придут завтра.` : 'Карточки этого урока уже в колоде.'}</p>
+        <p class="kicker">${L.issue ? 'Выпуск ' + L.issue + ' пройден' : (L.kind === 'test' ? 'Контрольная пройдена' : 'Тренировка завершена')}</p>
+        ${isTalk ? `<p class="verdict">Пять ответов вслух — это лучшая подготовка к настоящему интервью. Возвращайтесь к этим вопросам: с каждой неделей ответы будут звучать свободнее.</p>`
+          : `<p class="score">${pct}<small>%</small></p>
+        <p class="verdict">${verdict} Правильных ответов: ${score.right} из ${score.total}.</p>`}
+        ${(L.vocab || []).length ? `<p>${added ? `${added} ${plural(added, 'карточка добавлена', 'карточки добавлены', 'карточек добавлено')} в повторение. Первые придут завтра.` : 'Карточки этого урока уже в колоде.'}</p>` : ''}
         <div class="actions"><a class="btn primary" href="#home">На главную</a><a class="btn" href="#lesson-${L.id}" id="again">Пройти ещё раз</a></div>
       </div>`;
       stage.querySelector('#again').onclick = e => { e.preventDefault(); runLesson(L); };
@@ -405,7 +420,8 @@
     },
     choice(s, body, actions, box, report, next) {
       const it = s.it;
-      body.innerHTML = `<p class="q">${fmtQ(it.q)}</p><div class="opts">${it.o.map((o, i) => `<button class="opt" type="button" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
+      const order = it.fixed ? it.o.map((o, i) => i) : shuffle(it.o.map((o, i) => i));
+      body.innerHTML = `<p class="q">${fmtQ(it.q)}</p><div class="opts">${order.map(i => `<button class="opt" type="button" data-i="${i}">${esc(it.o[i])}</button>`).join('')}</div>`;
       body.querySelectorAll('.opt').forEach(b => b.onclick = () => {
         const i = +b.dataset.i, ok = i === it.a;
         body.querySelectorAll('.opt').forEach(x => { x.disabled = true; if (+x.dataset.i === it.a) x.classList.add('right'); });
@@ -475,12 +491,14 @@
     },
     reading(s, body, actions, box, report, next, L) {
       const vmap = {}; (L.vocab || []).forEach(v => vmap[v.en] = v);
-      const findV = t => (L.vocab || []).find(v => { const k = v.en.replace(/\(.*?\)/g, '').replace(/\bsb\b/, '').trim().split(' ').slice(0, 2).join(' ').toLowerCase(); return t.toLowerCase().startsWith(k.slice(0, Math.max(4, k.length - 2))); });
+      const STOP = ['the', 'sth', 'your', 'not', 'with', 'sb'];
+      const findV = t => { const tl = t.toLowerCase(); let best = null, score = 0; (L.vocab || []).forEach(v => { const ws = v.en.toLowerCase().replace(/\(.*?\)/g, '').split(/[\s\/]+/).filter(w => w.length > 2 && !STOP.includes(w)); const hits = ws.filter(w => tl.includes(w.slice(0, Math.max(3, w.length - 2)))).length; if (hits > score) { score = hits; best = v; } }); return best; };
       const paras = s.b.text.map(p => '<p>' + esc(p).replace(/\[\[(.+?)\]\]/g, (m, t) => { const v = findV(t); return `<button class="hl" type="button" data-tip="${esc(v ? v.ru : '')}">${t}</button>`; }) + '</p>').join('');
       const plain = s.b.text.join(' ').replace(/\[\[|\]\]/g, '');
-      body.innerHTML = `<article class="article"><h2>${esc(s.b.title)}</h2><p class="article-sf">${esc(s.b.standfirst)}</p>
+      body.innerHTML = `<article class="article"><figure class="cover" hidden><img alt=""></figure><h2>${esc(s.b.title)}</h2><p class="article-sf">${esc(s.b.standfirst)}</p>
         <div class="article-tools">${listenBtn(plain, 'Слушать статью')}<button class="stop" type="button">Стоп</button></div>
         <div class="article-body">${paras}</div><p class="article-note">Подчёркнутые выражения из урока: нажмите, чтобы увидеть перевод.</p></article>`;
+      withCover(body, 'images/' + L.id + '.jpg');
       body.querySelector('.stop').onclick = () => { try { speechSynthesis.cancel(); } catch (e) {} };
       body.querySelectorAll('.hl').forEach(b => b.onclick = () => { body.querySelectorAll('.hl.show').forEach(x => x !== b && x.classList.remove('show')); b.classList.toggle('show'); });
       const b = checkBtn(actions, 'К вопросам'); b.onclick = next;
@@ -498,7 +516,7 @@
         report(ok); nextBtn(actions, next);
       };
     },
-    speak(s, body, actions, box, report, next) {
+    speak(s, body, actions, box, report, next, L) {
       const b = s.b;
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       body.innerHTML = `<div class="speak">
@@ -528,7 +546,7 @@
           } catch (e) { st.textContent = 'Микрофон недоступен здесь.'; }
         };
       }
-      const done = checkBtn(actions, 'Завершить урок');
+      const done = checkBtn(actions, s.last ? (L.kind === 'interview' ? 'Завершить тренировку' : 'Завершить урок') : 'Следующий вопрос');
       done.onclick = () => { try { speechSynthesis.cancel(); } catch (e) {} next(); };
     }
   };
