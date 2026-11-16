@@ -138,10 +138,10 @@
           <p class="kicker">${kickerFor(next)}</p>
           <h1 class="headline">${esc(next.title)}</h1>
           <p class="standfirst" id="standfirst">${esc(next.grammar)}</p>
-          <div class="front-actions">
+          ${next.ready ? `<div class="front-actions">
             <a class="btn primary" href="#lesson-${next.id}">Открыть выпуск</a>
             <span class="meta">около ${next.minutes} минут</span>
-          </div>` : `
+          </div>` : `<p class="pending">Этот выпуск ещё готовится. Пока повторяйте слова: колода работает каждый день.</p>`}` : `
           <h1 class="headline">Все готовые выпуски пройдены</h1>
           <p class="standfirst">Новые уроки появятся здесь, как только будут добавлены. Пока повторяйте слова: колода работает каждый день.</p>`}
         </div>
@@ -162,15 +162,15 @@
       ${week ? weekStrip(week) : ''}
     </div>`);
     app.appendChild(el);
-    if (next) withCover(el, 'images/' + next.id + '.jpg', () => el.querySelector('.front-main').classList.add('has-cover'));
-    if (next) loadLesson(next.id).then(l => { const sf = document.getElementById('standfirst'); if (sf && l.standfirst) sf.textContent = l.standfirst; }).catch(() => {});
+    if (next && next.ready) withCover(el, 'images/' + next.id + '.jpg', () => el.querySelector('.front-main').classList.add('has-cover'));
+    if (next && next.ready) loadLesson(next.id).then(l => { const sf = document.getElementById('standfirst'); if (sf && l.standfirst) sf.textContent = l.standfirst; }).catch(() => {});
   }
 
   function weekStrip(week) {
     const items = (week.lessons || []).map((l, i) => {
       const done = state.done[l.id]; const isNext = nextLesson() && nextLesson().id === l.id;
-      const available = done || isNext;
-      let inner = `<span class="day">${DAY_RU[l.day].replace(/^д/, 'Д').replace(/^с/, 'С').replace(/^в/, 'В')}</span><span class="t">${esc(l.title)}</span><span class="g">${esc(l.grammar)}</span><span class="st">${done ? 'пройдено, ' + done.score + '%' : isNext ? 'сегодня' : 'позже'}</span>`;
+      const available = l.ready && (done || isNext);
+      let inner = `<span class="day">${DAY_RU[l.day].replace(/^д/, 'Д').replace(/^с/, 'С').replace(/^в/, 'В')}</span><span class="t">${esc(l.title)}</span><span class="g">${esc(l.grammar)}</span><span class="st">${done ? 'пройдено, ' + done.score + '%' : !l.ready ? 'готовится' : isNext ? 'сегодня' : 'позже'}</span>`;
       if (l.kind) inner = inner.replace('class="t"', 'class="t weekend"');
       return available ? `<a class="wk-item ${done ? 'done' : ''} ${isNext ? 'next' : ''}" href="#lesson-${l.id}">${inner}</a>` : `<div class="wk-item locked">${inner}</div>`;
     }).join('');
@@ -178,17 +178,26 @@
   }
 
   function viewContents() {
+    const nx = nextLesson();
     const parts = C1.course.parts.map(p => {
       const rows = p.weeks.map(n => {
         const w = C1.course.weeks.find(x => x.n === n);
         const ls = w.lessons || [];
-        const dots = ls.length ? ls.map(l => `<i class="${state.done[l.id] ? 'on' : ''}" title="${esc(l.title)}"></i>`).join('') : '<span class="soon">в работе</span>';
-        const link = ls.length ? `href="#lesson-${(ls.find(l => !state.done[l.id]) || ls[0]).id}"` : '';
-        return `<li class="${ls.length ? '' : 'dim'}"><span class="wn">${n}</span><span class="wt">${ls.length ? `<a ${link}>${esc(w.theme)}</a>` : esc(w.theme)}</span><span class="wg">${esc(w.grammar)}</span><span class="dots">${dots}</span></li>`;
+        const anyReady = ls.some(l => l.ready);
+        const dots = ls.map(l => `<i class="${state.done[l.id] ? 'on' : ''} ${l.kind ? 'wkend' : ''}" title="${esc(l.title)}"></i>`).join('');
+        const items = ls.map(l => {
+          const done = state.done[l.id];
+          const st = done ? `пройдено, ${done.score}%` : !l.ready ? 'готовится' : (nx && nx.id === l.id ? 'сегодня' : 'доступно позже');
+          const open = l.ready && (done || (nx && nx.id === l.id));
+          const t = open ? `<a href="#lesson-${l.id}">${esc(l.title)}</a>` : esc(l.title);
+          return `<li class="${l.kind ? 'wkend' : ''} ${done ? 'done' : ''}"><span class="ld">${DAY_RU[l.day].replace(/^./, c => c.toUpperCase())}</span><span class="lt">${t}</span><span class="lg">${esc(l.grammar)}</span><span class="ls">${st}</span></li>`;
+        }).join('');
+        const isCur = nx && nx.week === n;
+        return `<li class="${anyReady ? '' : 'dim'}"><details ${isCur ? 'open' : ''}><summary><span class="wn">${n}</span><span class="wt">${esc(w.theme)}</span><span class="wg">${esc(w.grammar)}</span><span class="dots">${dots}</span></summary><ol class="lessons">${items}</ol></details></li>`;
       }).join('');
       return `<section class="part"><h2><span class="pn">Часть ${p.n}</span> ${esc(p.title)}</h2><p class="part-ru">${esc(p.ru)}</p><ol class="toc">${rows}</ol></section>`;
     }).join('');
-    app.appendChild(h(`<div class="page contents"><h1 class="page-title">Содержание</h1><p class="page-lead">26 недель, по пять уроков в неделю. В субботу контрольная, в воскресенье тренировка интервью. Уроки добавляются блоками по мере прохождения.</p>${parts}</div>`));
+    app.appendChild(h(`<div class="page contents"><h1 class="page-title">Содержание</h1><p class="page-lead">26 недель: пять уроков с понедельника по пятницу, в субботу контрольная, в воскресенье тренировка интервью. Нажмите на неделю, чтобы увидеть её уроки. Новые недели добавляются блоками.</p>${parts}</div>`));
   }
 
   /* ---------- review ---------- */
@@ -260,7 +269,7 @@
     const el = h(`<div class="page grammar"><h1 class="page-title">Грамматика</h1><p class="page-lead">Справочник по темам из пройденных и текущего урока. Удобно открыть, если что-то забылось.</p><div class="g-list"></div></div>`);
     app.appendChild(el);
     const list = el.querySelector('.g-list');
-    const ids = allLessons().filter(l => state.done[l.id] || (nextLesson() && nextLesson().id === l.id)).map(l => l.id);
+    const ids = allLessons().filter(l => l.ready && (state.done[l.id] || (nextLesson() && nextLesson().id === l.id))).map(l => l.id);
     if (!ids.length) { list.innerHTML = '<p>Пока пусто.</p>'; return; }
     Promise.all(ids.map(id => loadLesson(id).catch(() => null))).then(ls => {
       ls.filter(Boolean).forEach(l => l.steps.forEach(s => s.blocks.filter(b => b.type === 'theory').forEach(b => {

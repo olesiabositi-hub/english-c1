@@ -324,3 +324,29 @@ figure.cover img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit
 .issue-no.word { font-size: clamp(80px, 11vw, 140px); }
 .article figure.cover { margin: 0 0 24px; }
 .wk-item .t.weekend { font-style: italic; font-weight: 400; }
+
+/* contents: expandable weeks */
+.toc > li { display: block; padding: 0; }
+.toc details > summary { display: grid; grid-template-columns: 48px minmax(0, 1.3fr) minmax(0, 1.6fr) 120px; gap: 16px; align-items: baseline; padding: 12px 0; cursor: pointer; list-style: none; }
+.toc details > summary::-webkit-details-marker { display: none; }
+.toc details > summary:hover .wt { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.toc details[open] > summary .wt { color: var(--red); }
+.toc .dots i.wkend { border-radius: 2px; }
+.lessons { list-style: none; margin: 0 0 14px 64px; padding: 0; border-top: 1px dotted var(--rule); }
+.lessons li { display: grid; grid-template-columns: 100px minmax(0, 1.2fr) minmax(0, 1.5fr) 120px; gap: 12px; padding: 7px 0; border-bottom: 1px dotted var(--rule); font-size: 14.5px; align-items: baseline; }
+.lessons .ld { color: var(--ink-3); font-size: 13px; }
+.lessons .lt { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+.lessons .lt a { text-decoration: none; border-bottom: 1px solid var(--red); }
+.lessons .wkend .lt { font-style: italic; font-weight: 400; }
+.lessons .lg { color: var(--ink-2); }
+.lessons .ls { color: var(--ink-3); font-size: 13px; text-align: right; }
+.lessons .done .ls { color: var(--green); }
+.pending { color: var(--ink-2); font-size: 16px; border-left: 3px solid var(--gold); padding-left: 12px; max-width: 52ch; }
+@media (max-width: 860px) {
+  .toc details > summary { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .toc details > summary .wg { grid-column: 2 / 4; grid-row: 2; }
+  .lessons { margin-left: 0; }
+  .lessons li { grid-template-columns: 90px minmax(0, 1fr); }
+  .lessons .lg { grid-column: 2; }
+  .lessons .ls { grid-column: 2; text-align: left; }
+}
