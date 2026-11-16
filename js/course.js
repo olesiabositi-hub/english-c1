@@ -20,13 +20,13 @@ C1.course = {
       { ready: true, id: 'w01sun', day: 7, kind: 'interview', title: 'Interview practice', grammar: 'Пять вопросов с интервью', minutes: 30 }
     ]},
     { n: 2, theme: 'People and personality', grammar: 'Habits and characteristic behaviour', lessons: [
-      { id: 'w02d1', day: 1, issue: 6, title: 'Creatures of habit', grammar: 'Present habits: will, tend to, keep -ing, always + continuous', minutes: 40 },
-      { id: 'w02d2', day: 2, issue: 7, title: 'The way we were', grammar: 'Past habits: used to, would, past simple', minutes: 40 },
-      { id: 'w02d3', day: 3, issue: 8, title: 'Getting used to it', grammar: 'be used to / get used to + -ing vs used to', minutes: 40 },
-      { id: 'w02d4', day: 4, issue: 9, title: 'Character at work', grammar: 'Word formation: compound adjectives, prefixes and suffixes', minutes: 40 },
-      { id: 'w02d5', day: 5, issue: 10, title: 'Strengths and weaknesses', grammar: 'Review + adverbs of degree (fairly, rather, pretty, extremely)', minutes: 45 },
-      { id: 'w02sat', day: 6, kind: 'test', title: 'Week 2 test', grammar: 'Контрольная по неделе', minutes: 25 },
-      { id: 'w02sun', day: 7, kind: 'interview', title: 'Interview practice', grammar: 'Пять вопросов с интервью', minutes: 30 }
+      { ready: true, id: 'w02d1', day: 1, issue: 6, title: 'Creatures of habit', grammar: 'Present habits: will, tend to, keep -ing, always + continuous', minutes: 40 },
+      { ready: true, id: 'w02d2', day: 2, issue: 7, title: 'The way we were', grammar: 'Past habits: used to, would, past simple', minutes: 40 },
+      { ready: true, id: 'w02d3', day: 3, issue: 8, title: 'Getting used to it', grammar: 'be used to / get used to + -ing vs used to', minutes: 40 },
+      { ready: true, id: 'w02d4', day: 4, issue: 9, title: 'Character at work', grammar: 'Word formation: compound adjectives, prefixes and suffixes', minutes: 40 },
+      { ready: true, id: 'w02d5', day: 5, issue: 10, title: 'Strengths and weaknesses', grammar: 'Review + adverbs of degree (fairly, rather, pretty, extremely)', minutes: 45 },
+      { ready: true, id: 'w02sat', day: 6, kind: 'test', title: 'Week 2 test', grammar: 'Контрольная по неделе', minutes: 25 },
+      { ready: true, id: 'w02sun', day: 7, kind: 'interview', title: 'Interview practice', grammar: 'Пять вопросов с интервью', minutes: 30 }
     ]},
     { n: 3, theme: 'Communication styles', grammar: 'Future forms', lessons: [
       { id: 'w03d1', day: 1, issue: 11, title: 'Plans and arrangements', grammar: 'will, going to, present continuous, present simple for timetables', minutes: 40 },
